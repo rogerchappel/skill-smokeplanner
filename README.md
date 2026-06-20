@@ -12,6 +12,16 @@ node bin/skill-smokeplanner.js plan fixtures/complete-skill/SKILL.md
 node bin/skill-smokeplanner.js plan fixtures/complete-skill/SKILL.md --json
 ```
 
+## Release Verification
+
+Run the release gate before tagging or publishing:
+
+```sh
+npm run release:check
+```
+
+The release gate runs package checks, tests, the fixture-backed CLI smoke, and a dry-run `npm pack` so missing runtime files are caught before publication.
+
 ## What It Checks
 
 - Required skill sections such as when to use, inputs, side effects, approvals, examples, and validation.
