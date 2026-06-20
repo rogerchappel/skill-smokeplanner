@@ -1,0 +1,29 @@
+{
+  "name": "skill-smokeplanner",
+  "version": "0.1.0",
+  "description": "Generate local smoke plans from SKILL.md files and repo metadata.",
+  "type": "module",
+  "bin": {
+    "skill-smokeplanner": "./bin/skill-smokeplanner.js"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node scripts/check-package.js",
+    "build": "node scripts/check-package.js",
+    "smoke": "node bin/skill-smokeplanner.js plan fixtures/complete-skill/SKILL.md --json"
+  },
+  "keywords": [
+    "agent-skills",
+    "smoke-test",
+    "safety",
+    "automation"
+  ],
+  "author": "Roger Chappel",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  }
+}
