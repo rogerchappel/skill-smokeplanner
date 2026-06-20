@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import test from "node:test";
 import { parseSkill, planSkill, renderPlan } from "../src/index.js";
 
@@ -45,4 +46,13 @@ test("renders markdown evidence checklist", async () => {
   const markdown = renderPlan(plan);
   assert.match(markdown, /Skill Smoke Plan/);
   assert.match(markdown, /Evidence To Capture/);
+});
+
+test("matches the complete skill golden plan shape", async () => {
+  const plan = await planSkill("fixtures/complete-skill/SKILL.md", {
+    repoRoot: "fixtures/complete-skill"
+  });
+  const markdown = renderPlan(plan).replace(/^(- Skill: ).+$/m, "$1fixtures/complete-skill/SKILL.md");
+  const expected = await readFile("fixtures/complete-skill/expected-plan.md", "utf8");
+  assert.equal(markdown.trim(), expected.trim());
 });
