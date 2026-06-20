@@ -9,11 +9,22 @@
   "exports": {
     ".": "./src/index.js"
   },
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "fixtures",
+    "SKILL.md",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "node --test",
     "check": "node scripts/check-package.js",
     "build": "node scripts/check-package.js",
-    "smoke": "node bin/skill-smokeplanner.js plan fixtures/complete-skill/SKILL.md --json"
+    "smoke": "node bin/skill-smokeplanner.js plan fixtures/complete-skill/SKILL.md --json",
+    "package:smoke": "npm pack --dry-run",
+    "release:check": "npm run check && npm test && npm run smoke && npm run package:smoke"
   },
   "keywords": [
     "agent-skills",
@@ -23,6 +34,14 @@
   ],
   "author": "Roger Chappel",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogerchappel/skill-smokeplanner.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/skill-smokeplanner/issues"
+  },
+  "homepage": "https://github.com/rogerchappel/skill-smokeplanner#readme",
   "engines": {
     "node": ">=20"
   }
