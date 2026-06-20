@@ -19,6 +19,8 @@ Ask before using real account data or external connectors.
 
 ## Examples
 
+Run the local verification commands.
+
 ```sh
 npm test
 npm run smoke
