@@ -1,0 +1,48 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { parseSkill, planSkill, renderPlan } from "../src/index.js";
+
+test("parses sections and shell snippets", () => {
+  const parsed = parseSkill(`# Demo
+
+## When To Use
+Use it.
+
+## Examples
+\`\`\`sh
+npm test
+\`\`\`
+`);
+  assert.equal(parsed.sections["when to use"], "Use it.");
+  assert.deepEqual(parsed.shellSnippets, ["npm test"]);
+});
+
+test("plans a complete skill with local commands", async () => {
+  const plan = await planSkill("fixtures/complete-skill/SKILL.md", {
+    repoRoot: "fixtures/complete-skill"
+  });
+  assert.equal(plan.findings.length, 0);
+  assert.equal(plan.commands.some((item) => item.command === "npm run test"), true);
+  assert.equal(plan.commands.some((item) => item.command === "npm run smoke"), true);
+});
+
+test("flags missing sections for sparse skills", async () => {
+  const plan = await planSkill("fixtures/sparse-skill/SKILL.md");
+  assert.equal(plan.findings.some((item) => item.message.includes("Approval Requirements")), true);
+  assert.equal(plan.findings.some((item) => item.message.includes("No local smoke commands")), true);
+});
+
+test("flags risky external action commands", async () => {
+  const plan = await planSkill("fixtures/risky-skill/SKILL.md");
+  assert.equal(plan.commands.filter((item) => item.risky).length, 3);
+  assert.equal(plan.findings.some((item) => item.message.includes("npm publish")), true);
+});
+
+test("renders markdown evidence checklist", async () => {
+  const plan = await planSkill("fixtures/complete-skill/SKILL.md", {
+    repoRoot: "fixtures/complete-skill"
+  });
+  const markdown = renderPlan(plan);
+  assert.match(markdown, /Skill Smoke Plan/);
+  assert.match(markdown, /Evidence To Capture/);
+});
