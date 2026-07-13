@@ -22,6 +22,8 @@ npm run release:check
 
 The release gate runs package checks, tests, the fixture-backed CLI smoke, and a dry-run `npm pack` so missing runtime files are caught before publication.
 
+`npm run package:smoke` also asserts the published tarball contains the CLI, library API, fixtures, release notes, skill guide, license, security policy, and contribution guide.
+
 ## What It Checks
 
 - Required skill sections such as when to use, inputs, side effects, approvals, examples, and validation.
