@@ -14,7 +14,7 @@
     "check": "node scripts/check-package.js",
     "build": "node scripts/check-package.js",
     "smoke": "node bin/skill-smokeplanner.js plan fixtures/complete-skill/SKILL.md --json",
-    "package:smoke": "npm pack --dry-run",
+    "package:smoke": "node scripts/package-smoke.js",
     "release:check": "npm run check && npm test && npm run build && npm run smoke && npm run package:smoke",
     "lint": "npm run check"
   },
@@ -40,10 +40,13 @@
   "files": [
     "bin",
     "src",
+    "scripts",
     "docs",
     "fixtures",
     "SKILL.md",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "SECURITY.md",
+    "CONTRIBUTING.md"
   ]
 }
