@@ -28,13 +28,14 @@ The release gate runs package checks, tests, the fixture-backed CLI smoke, and a
 
 - Required skill sections such as when to use, inputs, side effects, approvals, examples, and validation.
 - Local smoke commands from fenced shell snippets and `package.json` scripts.
-- Risky command words such as publish, deploy, curl, message, or gh release.
+- Risky command words such as publish, deploy, curl, message, or gh release. Matching is case-insensitive and checks both suggested `npm run` wrappers and their package-script bodies.
 - Evidence artifacts a reviewer should expect from the smoke run.
 
 ## Safety Notes
 
 - The planner never runs commands.
 - Commands are recommendations only and should be reviewed before execution.
+- Markdown and JSON plans include each suggested package command's source and script body so reviewers can inspect indirect behavior.
 - External actions are flagged as warnings so a maintainer can replace them with fixtures or dry-run equivalents.
 
 ## Limitations

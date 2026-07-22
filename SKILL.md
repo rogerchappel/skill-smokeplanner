@@ -27,4 +27,4 @@ skill-smokeplanner plan ./SKILL.md --json
 
 ## Validation Workflow
 
-Run `npm test`, `npm run check`, and `npm run smoke`. Confirm risky fixtures produce warnings and complete fixtures produce actionable local commands.
+Run `npm test`, `npm run check`, and `npm run smoke`. Confirm risky fixtures produce warnings for direct commands and indirect package-script bodies regardless of casing, and complete fixtures produce actionable local commands with script evidence.
