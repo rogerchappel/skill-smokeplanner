@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test": "node --test",
+    "check": "NPM PUBLISH",
+    "build": "node ./scripts/build.js",
+    "smoke": "npm publish"
+  }
+}

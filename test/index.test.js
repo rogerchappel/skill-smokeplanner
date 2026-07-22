@@ -39,6 +39,25 @@ test("flags risky external action commands", async () => {
   assert.equal(plan.findings.some((item) => item.message.includes("npm publish")), true);
 });
 
+test("flags package-script bodies and commands regardless of casing", async () => {
+  const plan = await planSkill("fixtures/script-risk-skill/SKILL.md", {
+    repoRoot: "fixtures/script-risk-skill"
+  });
+
+  const testCommand = plan.commands.find((item) => item.command === "npm run test");
+  const checkCommand = plan.commands.find((item) => item.command === "npm run check");
+  const buildCommand = plan.commands.find((item) => item.command === "npm run build");
+  const smokeCommand = plan.commands.find((item) => item.command === "npm run smoke");
+  const exampleCommand = plan.commands.find((item) => item.command === "NPM PUBLISH");
+
+  assert.deepEqual(
+    [testCommand?.risky, checkCommand?.risky, buildCommand?.risky, smokeCommand?.risky, exampleCommand?.risky],
+    [false, true, false, true, true]
+  );
+  assert.equal(smokeCommand?.script, "npm publish");
+  assert.equal(checkCommand?.script, "NPM PUBLISH");
+});
+
 test("renders markdown evidence checklist", async () => {
   const plan = await planSkill("fixtures/complete-skill/SKILL.md", {
     repoRoot: "fixtures/complete-skill"
