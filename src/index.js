@@ -129,7 +129,7 @@ function suggestCommands(parsed, packageScripts) {
 
   for (const preferred of ["test", "check", "build", "smoke"]) {
     if (packageScripts[preferred]) {
-      commands.push(makeCommand(`npm run ${preferred}`, `package.json#${preferred}`));
+      commands.push(makeCommand(`npm run ${preferred}`, `package.json#${preferred}`, packageScripts[preferred]));
     }
   }
 
@@ -160,9 +160,10 @@ function findGaps(parsed, commands) {
 
   for (const command of commands) {
     if (command.risky) {
+      const scriptEvidence = command.script ? ` (script: ${command.script})` : "";
       findings.push({
         severity: "warning",
-        message: `Review risky command before running: ${command.command}`
+        message: `Review risky command before running: ${command.command}${scriptEvidence}`
       });
     }
   }
@@ -196,12 +197,23 @@ async function readPackageScripts(repoRoot) {
   }
 }
 
-function makeCommand(command, source) {
+function makeCommand(command, source, script) {
+  const inspectedCommands = [command, script]
+    .filter((value) => typeof value === "string")
+    .map(normalizeCommandForRisk);
+
   return {
     command,
     source,
-    risky: RISKY_COMMANDS.some((pattern) => pattern.test(command))
+    ...(script === undefined ? {} : { script }),
+    risky: inspectedCommands.some((candidate) =>
+      RISKY_COMMANDS.some((pattern) => pattern.test(candidate))
+    )
   };
+}
+
+function normalizeCommandForRisk(command) {
+  return command.toLowerCase();
 }
 
 function normalizeHeading(value) {
