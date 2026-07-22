@@ -103,7 +103,10 @@ export function renderPlan(plan) {
   } else {
     for (const command of plan.commands) {
       const risk = command.risky ? " risky" : " local";
-      lines.push(`- [${risk.trim()}] \`${command.command}\` (${command.source})`);
+      const scriptEvidence = command.script === undefined
+        ? ""
+        : `; script: ${JSON.stringify(command.script)}`;
+      lines.push(`- [${risk.trim()}] \`${command.command}\` (${command.source}${scriptEvidence})`);
     }
   }
 

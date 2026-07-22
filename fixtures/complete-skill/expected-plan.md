@@ -5,9 +5,9 @@
 
 ## Recommended Local Commands
 
-- [local] `npm run test` (package.json#test)
-- [local] `npm run check` (package.json#check)
-- [local] `npm run smoke` (package.json#smoke)
+- [local] `npm run test` (package.json#test; script: "node --test")
+- [local] `npm run check` (package.json#check; script: "node scripts/check.js")
+- [local] `npm run smoke` (package.json#smoke; script: "node cli.js --fixture")
 - [local] `npm test` (SKILL.md example)
 
 ## Findings

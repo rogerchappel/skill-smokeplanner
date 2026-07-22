@@ -56,6 +56,10 @@ test("flags package-script bodies and commands regardless of casing", async () =
   );
   assert.equal(smokeCommand?.script, "npm publish");
   assert.equal(checkCommand?.script, "NPM PUBLISH");
+
+  const markdown = renderPlan(plan);
+  assert.match(markdown, /npm run smoke.*package\.json#smoke; script: "npm publish"/);
+  assert.match(markdown, /WARNING: Review risky command.*script: npm publish/);
 });
 
 test("renders markdown evidence checklist", async () => {
