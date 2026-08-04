@@ -47,22 +47,31 @@ export function parseSkill(markdown) {
   const lines = markdown.split(/\r?\n/);
   let current = "intro";
   let inFence = false;
+  let fenceMarker = "";
+  let fenceLength = 0;
   let fenceLang = "";
   let fence = [];
 
   for (const line of lines) {
-    const fenceMatch = line.match(/^```([A-Za-z0-9_-]*)\s*$/);
-    if (fenceMatch && !inFence) {
+    const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+    if (fenceMatch && !inFence && !(fenceMatch[1][0] === "`" && fenceMatch[2].includes("`"))) {
       inFence = true;
-      fenceLang = fenceMatch[1].toLowerCase();
+      fenceMarker = fenceMatch[1][0];
+      fenceLength = fenceMatch[1].length;
+      fenceLang = fenceMatch[2].trim().split(/\s+/, 1)[0].toLowerCase();
       fence = [];
       continue;
     }
-    if (line.trim() === "```" && inFence) {
+    const closingFence = inFence
+      ? line.match(new RegExp(`^ {0,3}${fenceMarker === "`" ? "`" : "~"}{${fenceLength},}\\s*$`))
+      : null;
+    if (closingFence) {
       if (["sh", "shell", "bash", "zsh"].includes(fenceLang)) {
         shellSnippets.push(fence.join("\n").trim());
       }
       inFence = false;
+      fenceMarker = "";
+      fenceLength = 0;
       fenceLang = "";
       fence = [];
       continue;
