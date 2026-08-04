@@ -41,5 +41,7 @@ The release gate runs package checks, tests, the fixture-backed CLI smoke, and a
 ## Limitations
 
 - Markdown parsing is intentionally small and deterministic.
+- Shell examples may use CommonMark backtick or tilde fences (three or more matching markers) with an `sh`, `shell`, `bash`, or `zsh` info string. A closing fence must use the same marker and be at least as long as its opener.
+- The CLI accepts exactly `plan <skill-path>` with an optional single `--json` flag; unknown, duplicate, and extra arguments are errors.
 - Risk detection is heuristic and errs on the side of warnings.
 - The planner cannot prove that a skill works; it creates a repeatable checklist for local validation.
