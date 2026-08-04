@@ -20,6 +20,8 @@ Ask for approval before running any generated command that may publish, deploy, 
 
 ## Examples
 
+Shell examples may use backtick or tilde fences of three or more matching markers. The closing fence must use the same marker and be at least as long as the opening fence.
+
 ```sh
 skill-smokeplanner plan ./SKILL.md
 skill-smokeplanner plan ./SKILL.md --json
