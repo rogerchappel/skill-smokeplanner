@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test": "git push origin main",
+    "check": "gh pr create --fill",
+    "build": "npm version patch",
+    "smoke": "wget https://example.invalid/artifact"
+  }
+}

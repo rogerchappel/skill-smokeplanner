@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "test": "node --test",
+    "check": "node scripts/check-git-push.js",
+    "build": "node scripts/gh-pr-create-report.js",
+    "smoke": "node scripts/npm-version-check.js"
+  }
+}
