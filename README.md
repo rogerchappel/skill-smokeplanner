@@ -28,7 +28,7 @@ The release gate runs package checks, tests, the fixture-backed CLI smoke, and a
 
 - Required skill sections such as when to use, inputs, side effects, approvals, examples, and validation.
 - Local smoke commands from fenced shell snippets and `package.json` scripts.
-- Risky command words such as publish, deploy, curl, message, or gh release. Matching is case-insensitive and checks both suggested `npm run` wrappers and their package-script bodies.
+- Risky command families: mutating Git operations; mutating GitHub issue, pull-request, release, and repository operations; package publish/version operations; deploy, messaging, destructive removal, and network commands (`curl`, `wget`, `ssh`, and `scp`). Matching is case-insensitive and checks both fenced examples and suggested `npm run` wrappers' package-script bodies.
 - Evidence artifacts a reviewer should expect from the smoke run.
 
 ## Safety Notes
@@ -43,5 +43,5 @@ The release gate runs package checks, tests, the fixture-backed CLI smoke, and a
 - Markdown parsing is intentionally small and deterministic.
 - Shell examples may use CommonMark backtick or tilde fences (three or more matching markers) with an `sh`, `shell`, `bash`, or `zsh` info string. A closing fence must use the same marker and be at least as long as its opener.
 - The CLI accepts exactly `plan <skill-path>` with an optional single `--json` flag; unknown, duplicate, and extra arguments are errors.
-- Risk detection is heuristic and errs on the side of warnings.
+- Risk detection recognizes a conservative command taxonomy, not shell semantics. It does not expand aliases, variables, or scripts beyond the preferred `test`, `check`, `build`, and `smoke` package-script bodies.
 - The planner cannot prove that a skill works; it creates a repeatable checklist for local validation.
