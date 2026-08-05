@@ -16,7 +16,7 @@ The planner reads files and prints Markdown or JSON. It does not run shell comma
 
 ## Approval Requirements
 
-Ask for approval before running any generated command that may publish, deploy, mutate accounts, send messages, or call a live service.
+Ask for approval before running any generated command that may mutate a Git repository or GitHub resource, publish or version a package, deploy, send messages, remove system paths, or call a live service.
 
 ## Examples
 
@@ -29,4 +29,4 @@ skill-smokeplanner plan ./SKILL.md --json
 
 ## Validation Workflow
 
-Run `npm test`, `npm run check`, and `npm run smoke`. Confirm risky fixtures produce warnings for direct commands and indirect package-script bodies regardless of casing, and complete fixtures produce actionable local commands with script evidence.
+Run `npm test`, `npm run check`, and `npm run smoke`. Confirm taxonomy fixtures warn for repository, GitHub CLI, package publish/version, and network commands in direct examples and preferred package-script bodies; confirm safe-neighbor fixtures do not trigger broad substring matches.

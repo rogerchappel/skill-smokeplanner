@@ -127,6 +127,40 @@ test("flags package-script bodies and commands regardless of casing", async () =
   assert.match(markdown, /WARNING: Review risky command.*script: npm publish/);
 });
 
+test("flags repository, GitHub, package, and network mutations with evidence", async () => {
+  const plan = await planSkill("fixtures/command-taxonomy-skill/SKILL.md", {
+    repoRoot: "fixtures/command-taxonomy-skill"
+  });
+
+  assert.equal(plan.commands.length, 8);
+  assert.equal(plan.commands.every((item) => item.risky), true);
+
+  const markdown = renderPlan(plan);
+  for (const evidence of [
+    "git push origin main",
+    "gh pr create --fill",
+    "npm version patch",
+    "wget https://example.invalid/artifact",
+    "git commit -m release",
+    "gh issue close 42",
+    "pnpm publish",
+    "ssh example.invalid"
+  ]) {
+    assert.match(markdown, new RegExp(`WARNING: Review risky command before running: .*${evidence.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}`));
+  }
+  assert.match(markdown, /npm run test.*script: "git push origin main"/);
+});
+
+test("does not flag safe neighboring words and filenames", async () => {
+  const plan = await planSkill("fixtures/safe-neighbor-skill/SKILL.md", {
+    repoRoot: "fixtures/safe-neighbor-skill"
+  });
+
+  assert.equal(plan.commands.length, 7);
+  assert.equal(plan.commands.some((item) => item.risky), false);
+  assert.equal(plan.findings.some((item) => item.message.includes("risky command")), false);
+});
+
 test("renders markdown evidence checklist", async () => {
   const plan = await planSkill("fixtures/complete-skill/SKILL.md", {
     repoRoot: "fixtures/complete-skill"
