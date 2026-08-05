@@ -11,13 +11,15 @@ const REQUIRED_SECTIONS = [
 ];
 
 const RISKY_COMMANDS = [
-  /\bnpm\s+publish\b/,
-  /\bpnpm\s+publish\b/,
-  /\byarn\s+npm\s+publish\b/,
-  /\bgh\s+release\b/,
-  /\bgh\s+repo\s+edit\b/,
+  /\bgit\s+(?:commit|push|merge|rebase|reset|tag)\b/,
+  /\bgh\s+(?:issue\s+(?:close|create|delete|edit|reopen|transfer)|pr\s+(?:close|create|edit|merge|ready|reopen|review)|release\s+(?:create|delete|edit|upload)|repo\s+(?:archive|create|delete|edit|fork|rename|sync))\b/,
+  /\b(?:npm|pnpm)\s+(?:publish|unpublish|deprecate|version)\b/,
+  /\byarn\s+npm\s+(?:publish|tag\s+(?:add|remove))\b/,
   /\bdeploy\b/,
   /\bcurl\b/,
+  /\bwget\b/,
+  /\bssh\b/,
+  /\bscp\b/,
   /\bmessage\b/,
   /\bsend\b/,
   /\brm\s+-rf\s+\//
