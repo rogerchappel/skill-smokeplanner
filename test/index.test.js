@@ -19,6 +19,53 @@ npm test
   assert.deepEqual(parsed.shellSnippets, ["npm test"]);
 });
 
+test("parses CommonMark ATX headings with indentation and closing sequences", () => {
+  const parsed = parseSkill(`   ## When To Use ##
+Use it.
+
+ ### Inputs ###   
+Input details.
+
+#### Examples
+Examples here.
+
+###### Validation Workflow ######
+Validate it.
+`);
+
+  assert.equal(parsed.sections["when to use"], "Use it.");
+  assert.equal(parsed.sections.inputs, "Input details.");
+  assert.equal(parsed.sections.examples, "Examples here.");
+  assert.equal(parsed.sections["validation workflow"], "Validate it.");
+});
+
+test("does not parse four-space-indented or fenced heading examples", () => {
+  const parsed = parseSkill(`## When To Use
+Use it.
+
+    ## Inputs
+    This is indented code.
+
+\`\`\`md
+### Examples
+#### Validation Workflow ####
+\`\`\`
+`);
+
+  assert.deepEqual(Object.keys(parsed.sections), ["when to use"]);
+  assert.match(parsed.sections["when to use"], /## Inputs/);
+  assert.match(parsed.sections["when to use"], /This is indented code/);
+  assert.doesNotMatch(parsed.sections["when to use"], /### Examples/);
+});
+
+test("recognizes required sections under supported CommonMark ATX forms", async () => {
+  const plan = await planSkill("fixtures/commonmark-headings/SKILL.md", {
+    repoRoot: "fixtures/complete-skill"
+  });
+
+  assert.equal(plan.findings.length, 0);
+});
+
 test("supports CommonMark shell fences without parsing embedded headings", () => {
   const parsed = parseSkill(`# Demo
 
