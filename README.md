@@ -31,6 +31,12 @@ The release gate runs package checks, tests, the fixture-backed CLI smoke, and a
 - Risky command families: mutating Git operations; mutating GitHub issue, pull-request, release, and repository operations; package publish/version operations; deploy, messaging, destructive removal, and network commands (`curl`, `wget`, `ssh`, and `scp`). Matching is case-insensitive and checks both fenced examples and suggested `npm run` wrappers' package-script bodies.
 - Evidence artifacts a reviewer should expect from the smoke run.
 
+Section names may use CommonMark ATX headings from level 2 through level 6. The
+heading may have up to three leading spaces and an optional closing sequence of
+`#` characters, for example `   #### Inputs ####`. Headings inside fenced code
+blocks and headings indented by four or more spaces are treated as examples,
+not skill sections.
+
 ## Safety Notes
 
 - The planner never runs commands.
