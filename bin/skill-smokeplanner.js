@@ -17,14 +17,25 @@ async function main() {
   if (!skillPath) {
     throw new Error("Missing SKILL.md path.");
   }
-  const unknownFlag = flags.find((flag) => flag !== "--json");
-  if (unknownFlag) throw new Error(`Unknown argument: ${unknownFlag}`);
-  if (flags.filter((flag) => flag === "--json").length > 1) {
-    throw new Error("Duplicate argument: --json");
+  let json = false;
+  let repoRoot;
+  for (let index = 0; index < flags.length; index += 1) {
+    const flag = flags[index];
+    if (flag === "--json") {
+      if (json) throw new Error("Duplicate argument: --json");
+      json = true;
+    } else if (flag === "--repo-root") {
+      if (repoRoot !== undefined) throw new Error("Duplicate argument: --repo-root");
+      repoRoot = flags[index + 1];
+      if (!repoRoot || repoRoot.startsWith("--")) throw new Error("Missing value for --repo-root");
+      index += 1;
+    } else {
+      throw new Error(`Unknown argument: ${flag}`);
+    }
   }
 
-  const plan = await planSkill(skillPath);
-  if (flags.includes("--json")) {
+  const plan = await planSkill(skillPath, { ...(repoRoot === undefined ? {} : { repoRoot }) });
+  if (json) {
     console.log(JSON.stringify(plan, null, 2));
     return;
   }
@@ -35,8 +46,11 @@ function printHelp() {
   console.log(`skill-smokeplanner
 
 Usage:
-  skill-smokeplanner plan <skill-path>
-  skill-smokeplanner plan <skill-path> --json`);
+  skill-smokeplanner plan <skill-path> [--json] [--repo-root <path>]
+
+Options:
+  --json              Print the plan as JSON
+  --repo-root <path>  Read package.json only from this repository root`);
 }
 
 main().catch((error) => {

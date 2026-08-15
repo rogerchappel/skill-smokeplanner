@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 
 const REQUIRED_SECTIONS = [
@@ -29,7 +29,9 @@ export async function planSkill(skillPath, options = {}) {
   const absolutePath = path.resolve(skillPath);
   const markdown = await readFile(absolutePath, "utf8");
   const parsed = parseSkill(markdown);
-  const repoRoot = options.repoRoot ?? path.dirname(absolutePath);
+  const repoRoot = options.repoRoot === undefined
+    ? await discoverRepoRoot(absolutePath)
+    : path.resolve(options.repoRoot);
   const packageScripts = await readPackageScripts(repoRoot);
   const commands = suggestCommands(parsed, packageScripts);
   const findings = findGaps(parsed, commands);
@@ -41,6 +43,19 @@ export async function planSkill(skillPath, options = {}) {
     findings,
     evidence: evidenceFor(commands, findings)
   };
+}
+
+export async function discoverRepoRoot(skillPath) {
+  const skillDirectory = path.dirname(path.resolve(skillPath));
+  const repositoryRoot = await findContainingGitRoot(skillDirectory);
+  if (repositoryRoot === undefined) return skillDirectory;
+
+  let candidate = skillDirectory;
+  while (true) {
+    if (await exists(path.join(candidate, "package.json"))) return candidate;
+    if (candidate === repositoryRoot) return repositoryRoot;
+    candidate = path.dirname(candidate);
+  }
 }
 
 export function parseSkill(markdown) {
@@ -209,6 +224,26 @@ async function readPackageScripts(repoRoot) {
     return packageJson.scripts ?? {};
   } catch {
     return {};
+  }
+}
+
+async function findContainingGitRoot(start) {
+  let candidate = start;
+  while (true) {
+    if (await exists(path.join(candidate, ".git"))) return candidate;
+    const parent = path.dirname(candidate);
+    if (parent === candidate) return undefined;
+    candidate = parent;
+  }
+}
+
+async function exists(candidate) {
+  try {
+    await stat(candidate);
+    return true;
+  } catch (error) {
+    if (error?.code === "ENOENT" || error?.code === "ENOTDIR") return false;
+    throw error;
   }
 }
 
