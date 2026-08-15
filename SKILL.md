@@ -25,7 +25,12 @@ Shell examples may use backtick or tilde fences of three or more matching marker
 ```sh
 skill-smokeplanner plan ./SKILL.md
 skill-smokeplanner plan ./SKILL.md --json
+skill-smokeplanner plan ./skills/example/SKILL.md --repo-root .
 ```
+
+Without `--repo-root`, package metadata is discovered upward from `SKILL.md`
+and is bounded to its containing Git worktree. Pass `--repo-root` when the
+intended package root is elsewhere or an explicit boundary is preferable.
 
 ## Validation Workflow
 
