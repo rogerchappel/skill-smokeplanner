@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
-import { parseSkill, planSkill, renderPlan } from "../src/index.js";
+import { discoverRepoRoot, parseSkill, planSkill, renderPlan } from "../src/index.js";
 
 test("parses sections and shell snippets", () => {
   const parsed = parseSkill(`# Demo
@@ -108,13 +110,67 @@ test("CLI rejects unknown, duplicate, and extra arguments", () => {
   for (const args of [
     ["plan", "fixtures/complete-skill/SKILL.md", "--bogus"],
     ["plan", "fixtures/complete-skill/SKILL.md", "--json", "--json"],
+    ["plan", "fixtures/complete-skill/SKILL.md", "--repo-root"],
+    ["plan", "fixtures/complete-skill/SKILL.md", "--repo-root", ".", "--repo-root", "."],
     ["plan", "fixtures/complete-skill/SKILL.md", "extra.md"]
   ]) {
     const result = spawnSync(process.execPath, ["bin/skill-smokeplanner.js", ...args], { encoding: "utf8" });
     assert.notEqual(result.status, 0);
     assert.equal(result.stdout, "");
-    assert.match(result.stderr, /^(Unknown|Duplicate)/);
+    assert.match(result.stderr, /^(Unknown|Duplicate|Missing)/);
   }
+});
+
+test("discovers nearest ancestor package metadata within the Git worktree", async () => {
+  const skillPath = "fixtures/nested-repository/skills/example/SKILL.md";
+  const plan = await planSkill(skillPath);
+
+  assert.equal(await discoverRepoRoot(skillPath), path.resolve("fixtures/nested-repository"));
+  assert.deepEqual(plan.commands.map(({ command }) => command), ["npm run test", "npm run smoke"]);
+  assert.equal(plan.findings.some(({ message }) => message === "No local smoke commands found."), false);
+});
+
+test("CLI supports an explicit repository root override", () => {
+  const result = spawnSync(process.execPath, [
+    "bin/skill-smokeplanner.js",
+    "plan",
+    "fixtures/nested-repository/skills/example/SKILL.md",
+    "--repo-root",
+    "fixtures/complete-skill",
+    "--json"
+  ], { encoding: "utf8" });
+
+  assert.equal(result.status, 0);
+  const plan = JSON.parse(result.stdout);
+  assert.deepEqual(plan.commands.map(({ command }) => command), [
+    "npm run test",
+    "npm run check",
+    "npm run smoke"
+  ]);
+});
+
+test("does not discover unrelated package metadata above a repository boundary", async () => {
+  const outer = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-boundary-"));
+  const repository = path.join(outer, "repository");
+  const skillDirectory = path.join(repository, "skills", "example");
+  await mkdir(path.join(repository, ".git"), { recursive: true });
+  await mkdir(skillDirectory, { recursive: true });
+  await writeFile(path.join(outer, "package.json"), JSON.stringify({ scripts: { test: "outside" } }));
+  await writeFile(path.join(skillDirectory, "SKILL.md"), "# Example\n");
+
+  const plan = await planSkill(path.join(skillDirectory, "SKILL.md"));
+  assert.deepEqual(plan.commands, []);
+  assert.equal(plan.findings.some(({ message }) => message === "No local smoke commands found."), true);
+});
+
+test("missing and malformed package.json files produce no package commands", async () => {
+  const root = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-packages-"));
+  const skill = path.join(root, "SKILL.md");
+  await writeFile(skill, "# Example\n");
+
+  assert.deepEqual((await planSkill(skill, { repoRoot: root })).commands, []);
+  await writeFile(path.join(root, "package.json"), "{ malformed");
+  assert.deepEqual((await planSkill(skill, { repoRoot: root })).commands, []);
 });
 
 test("CLI keeps help, Markdown, and JSON invocations stable", () => {
@@ -139,8 +195,10 @@ test("plans a complete skill with local commands", async () => {
   assert.equal(plan.commands.some((item) => item.command === "npm run smoke"), true);
 });
 
-test("flags missing sections for sparse skills", async () => {
-  const plan = await planSkill("fixtures/sparse-skill/SKILL.md");
+test("flags missing sections and commands for a sparse standalone skill", async () => {
+  const plan = await planSkill("fixtures/sparse-skill/SKILL.md", {
+    repoRoot: "fixtures/sparse-skill"
+  });
   assert.equal(plan.findings.some((item) => item.message.includes("Approval Requirements")), true);
   assert.equal(plan.findings.some((item) => item.message.includes("No local smoke commands")), true);
 });
