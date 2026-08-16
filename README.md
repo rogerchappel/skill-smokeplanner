@@ -10,6 +10,7 @@ npm test
 npm run smoke
 node bin/skill-smokeplanner.js plan fixtures/complete-skill/SKILL.md
 node bin/skill-smokeplanner.js plan fixtures/complete-skill/SKILL.md --json
+node bin/skill-smokeplanner.js plan path/to/SKILL.md --repo-root path/to/repository
 ```
 
 ## Release Verification
@@ -31,6 +32,13 @@ The release gate runs package checks, tests, the fixture-backed CLI smoke, and a
 - Risky command families: mutating Git operations; mutating GitHub issue, pull-request, release, and repository operations; package publish/version operations; deploy, messaging, destructive removal, and network commands (`curl`, `wget`, `ssh`, and `scp`). Matching is case-insensitive and checks both fenced examples and suggested `npm run` wrappers' package-script bodies.
 - Evidence artifacts a reviewer should expect from the smoke run.
 
+By default, the planner searches from the `SKILL.md` directory upward for the
+nearest `package.json`, stopping at the root of the containing Git worktree. It
+does not inspect package metadata above that boundary. Outside a Git worktree,
+only a `package.json` beside `SKILL.md` is considered. Use `--repo-root <path>`
+to read one specific repository root instead; the library API provides the same
+override as `planSkill(skillPath, { repoRoot })`.
+
 Section names may use CommonMark ATX headings from level 2 through level 6. The
 heading may have up to three leading spaces and an optional closing sequence of
 `#` characters, for example `   #### Inputs ####`. Headings inside fenced code
@@ -48,6 +56,6 @@ not skill sections.
 
 - Markdown parsing is intentionally small and deterministic.
 - Shell examples may use CommonMark backtick or tilde fences (three or more matching markers) with an `sh`, `shell`, `bash`, or `zsh` info string. A closing fence must use the same marker and be at least as long as its opener.
-- The CLI accepts exactly `plan <skill-path>` with an optional single `--json` flag; unknown, duplicate, and extra arguments are errors.
+- The CLI accepts `plan <skill-path>` with optional single `--json` and `--repo-root <path>` flags; unknown, duplicate, missing-value, and extra arguments are errors.
 - Risk detection recognizes a conservative command taxonomy, not shell semantics. It does not expand aliases, variables, or scripts beyond the preferred `test`, `check`, `build`, and `smoke` package-script bodies.
 - The planner cannot prove that a skill works; it creates a repeatable checklist for local validation.
