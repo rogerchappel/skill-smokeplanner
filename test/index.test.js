@@ -35,7 +35,7 @@ Examples here.
 Validate it.
 `);
 
-  assert.equal(parsed.sections["when to use"], "Use it.");
+  assert.equal(parsed.sections["when to use"], "Use it.\n\nInput details.\n\nExamples here.\n\nValidate it.");
   assert.equal(parsed.sections.inputs, "Input details.");
   assert.equal(parsed.sections.examples, "Examples here.");
   assert.equal(parsed.sections["validation workflow"], "Validate it.");

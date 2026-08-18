@@ -63,6 +63,7 @@ export function parseSkill(markdown) {
   const shellSnippets = [];
   const lines = markdown.split(/\r?\n/);
   let current = "intro";
+  let enclosingH2;
   let inFence = false;
   let fenceMarker = "";
   let fenceLength = 0;
@@ -98,14 +99,17 @@ export function parseSkill(markdown) {
       continue;
     }
 
-    const heading = line.match(/^ {0,3}#{2,6}(?:[ \t]+|$)(.*)$/);
+    const heading = line.match(/^ {0,3}(#{2,6})(?:[ \t]+|$)(.*)$/);
     if (heading) {
-      const headingText = heading[1].replace(/[ \t]+#+[ \t]*$/, "").trim();
+      const headingText = heading[2].replace(/[ \t]+#+[ \t]*$/, "").trim();
       current = normalizeHeading(headingText);
       sections[current] = sections[current] ?? "";
+      if (heading[1].length === 2) enclosingH2 = current;
       continue;
     }
-    sections[current] = `${sections[current] ?? ""}${line}\n`;
+    for (const target of new Set([current, enclosingH2].filter(Boolean))) {
+      sections[target] = `${sections[target] ?? ""}${line}\n`;
+    }
   }
 
   return {
