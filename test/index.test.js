@@ -41,6 +41,49 @@ Validate it.
   assert.equal(parsed.sections["validation workflow"], "Validate it.");
 });
 
+test("attributes nested subsection content to its enclosing H2 section", () => {
+  const parsed = parseSkill(`## When To Use
+Parent introduction.
+
+### Scenario
+Nested use case.
+
+#### Detail
+Deeply nested detail.
+
+## Required Tools Or Inputs
+### Runtime
+Node.js 20.
+
+## Examples
+Sibling content.
+`);
+
+  assert.equal(parsed.sections["when to use"], "Parent introduction.\n\nNested use case.\n\nDeeply nested detail.");
+  assert.equal(parsed.sections.scenario, "Nested use case.");
+  assert.equal(parsed.sections.detail, "Deeply nested detail.");
+  assert.equal(parsed.sections["required tools or inputs"], "Node.js 20.");
+  assert.equal(parsed.sections.runtime, "Node.js 20.");
+  assert.equal(parsed.sections.examples, "Sibling content.");
+  assert.doesNotMatch(parsed.sections["required tools or inputs"], /Sibling content/);
+});
+
+test("keeps fenced nested headings out of parent and child sections", () => {
+  const parsed = parseSkill(`## When To Use
+### Scenario
+Use it.
+
+\`\`\`md
+#### Fenced Example
+not visible section content
+\`\`\`
+`);
+
+  assert.equal(parsed.sections["fenced example"], undefined);
+  assert.equal(parsed.sections.scenario, "Use it.");
+  assert.equal(parsed.sections["when to use"], "Use it.");
+});
+
 test("does not parse four-space-indented or fenced heading examples", () => {
   const parsed = parseSkill(`## When To Use
 Use it.
@@ -184,6 +227,17 @@ test("CLI keeps help, Markdown, and JSON invocations stable", () => {
   assert.match(markdown.stdout, /^# Skill Smoke Plan/);
   assert.equal(json.status, 0);
   assert.doesNotThrow(() => JSON.parse(json.stdout));
+});
+
+test("CLI accepts populated required sections implemented with nested subsections", () => {
+  for (const args of [
+    ["plan", "fixtures/nested-sections-skill/SKILL.md"],
+    ["plan", "fixtures/nested-sections-skill/SKILL.md", "--json"]
+  ]) {
+    const result = spawnSync(process.execPath, ["bin/skill-smokeplanner.js", ...args], { encoding: "utf8" });
+    assert.equal(result.status, 0);
+    assert.doesNotMatch(result.stdout, /Missing or empty section/);
+  }
 });
 
 test("plans a complete skill with local commands", async () => {
