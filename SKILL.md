@@ -32,6 +32,11 @@ Without `--repo-root`, package metadata is discovered upward from `SKILL.md`
 and is bounded to its containing Git worktree. Pass `--repo-root` when the
 intended package root is elsewhere or an explicit boundary is preferable.
 
+Required H2 sections may organize their content under H3-H6 subsections. The
+planner keeps each child subsection in the parsed output and also attributes
+its visible content to the enclosing H2. Fenced heading examples remain ignored,
+and a new H2 starts a separate section boundary.
+
 ## Validation Workflow
 
 Run `npm test`, `npm run check`, and `npm run smoke`. Confirm taxonomy fixtures warn for repository, GitHub CLI, package publish/version, and network commands in direct examples and preferred package-script bodies; confirm safe-neighbor fixtures do not trigger broad substring matches.
