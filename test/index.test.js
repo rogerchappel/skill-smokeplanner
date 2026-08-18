@@ -165,12 +165,37 @@ test("CLI rejects unknown, duplicate, and extra arguments", () => {
 });
 
 test("discovers nearest ancestor package metadata within the Git worktree", async () => {
-  const skillPath = "fixtures/nested-repository/skills/example/SKILL.md";
+  const repository = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-worktree-"));
+  const skillPath = path.join(repository, "skills", "example", "SKILL.md");
+  await mkdir(path.join(repository, ".git"));
+  await mkdir(path.dirname(skillPath), { recursive: true });
+  await writeFile(path.join(repository, "package.json"), JSON.stringify({
+    scripts: { test: "node --test", smoke: "node smoke.js" }
+  }));
+  await writeFile(skillPath, "# Example\n");
   const plan = await planSkill(skillPath);
 
-  assert.equal(await discoverRepoRoot(skillPath), path.resolve("fixtures/nested-repository"));
+  assert.equal(await discoverRepoRoot(skillPath), repository);
   assert.deepEqual(plan.commands.map(({ command }) => command), ["npm run test", "npm run smoke"]);
   assert.equal(plan.findings.some(({ message }) => message === "No local smoke commands found."), false);
+});
+
+test("outside a Git worktree only discovers package metadata beside the skill", async () => {
+  const outer = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-export-"));
+  const skillDirectory = path.join(outer, "export", "skills", "example");
+  const skillPath = path.join(skillDirectory, "SKILL.md");
+  await mkdir(skillDirectory, { recursive: true });
+  await writeFile(path.join(outer, "export", "package.json"), JSON.stringify({
+    scripts: { test: "ancestor" }
+  }));
+  await writeFile(path.join(skillDirectory, "package.json"), JSON.stringify({
+    scripts: { smoke: "node smoke.js" }
+  }));
+  await writeFile(skillPath, "# Example\n");
+
+  const plan = await planSkill(skillPath);
+  assert.equal(await discoverRepoRoot(skillPath), skillDirectory);
+  assert.deepEqual(plan.commands.map(({ command }) => command), ["npm run smoke"]);
 });
 
 test("CLI supports an explicit repository root override", () => {
