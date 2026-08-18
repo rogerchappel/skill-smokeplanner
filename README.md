@@ -43,7 +43,10 @@ Section names may use CommonMark ATX headings from level 2 through level 6. The
 heading may have up to three leading spaces and an optional closing sequence of
 `#` characters, for example `   #### Inputs ####`. Headings inside fenced code
 blocks and headings indented by four or more spaces are treated as examples,
-not skill sections.
+not skill sections. Content beneath an H3-H6 subsection is attributed both to
+that subsection and to its enclosing H2 section. This lets required H2 sections
+organize their substantive guidance under nested headings without producing
+false missing-section warnings; content never carries into a sibling H2.
 
 ## Safety Notes
 
