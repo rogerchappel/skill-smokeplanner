@@ -18,3 +18,10 @@ jobs:
           node-version: "20"
       - run: npm install
       - run: npm run release:check
+      - name: Verify release gate from source export
+        run: |
+          export_dir="$(mktemp -d)"
+          git archive HEAD | tar -x -C "$export_dir"
+          cd "$export_dir"
+          npm install --ignore-scripts
+          npm run release:check
