@@ -288,6 +288,27 @@ test("flags risky external action commands", async () => {
   assert.equal(plan.findings.some((item) => item.message.includes("npm publish")), true);
 });
 
+test("flags destructive cleanup without flagging safe neighbors", async () => {
+  const plan = await planSkill("fixtures/cleanup-risk-skill/SKILL.md");
+  const risks = Object.fromEntries(plan.commands.map(({ command, risky }) => [command, risky]));
+
+  for (const command of [
+    "git clean -fdx",
+    "git clean ./build --force -d",
+    "rm -rf dist",
+    "rm ./coverage -fr",
+    "rm --recursive ./cache --force"
+  ]) assert.equal(risks[command], true, `${command} should be risky`);
+
+  for (const command of [
+    "git clean -ndx",
+    "git clean --dry-run -fd",
+    "git status --short",
+    "rm -r logs",
+    "rm -f artifact.txt"
+  ]) assert.equal(risks[command], false, `${command} should remain non-risky`);
+});
+
 test("flags package-script bodies and commands regardless of casing", async () => {
   const plan = await planSkill("fixtures/script-risk-skill/SKILL.md", {
     repoRoot: "fixtures/script-risk-skill"
