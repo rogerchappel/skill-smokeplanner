@@ -21,8 +21,7 @@ const RISKY_COMMANDS = [
   /\bssh\b/,
   /\bscp\b/,
   /\bmessage\b/,
-  /\bsend\b/,
-  /\brm\s+-rf\s+\//
+  /\bsend\b/
 ];
 
 export async function planSkill(skillPath, options = {}) {
@@ -261,9 +260,29 @@ function makeCommand(command, source, script) {
     source,
     ...(script === undefined ? {} : { script }),
     risky: inspectedCommands.some((candidate) =>
-      RISKY_COMMANDS.some((pattern) => pattern.test(candidate))
+      RISKY_COMMANDS.some((pattern) => pattern.test(candidate)) || hasDestructiveCleanup(candidate)
     )
   };
+}
+
+function hasDestructiveCleanup(command) {
+  for (const segment of command.split(/(?:&&|\|\||[;|])/u)) {
+    const tokens = segment.trim().split(/\s+/u);
+    if (tokens[0] === "git" && tokens[1] === "clean") {
+      const options = tokens.slice(2).filter((token) => token.startsWith("-"));
+      const dryRun = options.some((token) => token === "--dry-run" || /^-[^-]*n/u.test(token));
+      const forced = options.some((token) => token === "--force" || /^-[^-]*f/u.test(token));
+      if (forced && !dryRun) return true;
+    }
+
+    if (tokens[0] === "rm") {
+      const options = tokens.slice(1).filter((token) => token.startsWith("-"));
+      const recursive = options.some((token) => token === "--recursive" || /^-[^-]*[rR]/u.test(token));
+      const forced = options.some((token) => token === "--force" || /^-[^-]*f/u.test(token));
+      if (recursive && forced) return true;
+    }
+  }
+  return false;
 }
 
 function normalizeCommandForRisk(command) {
