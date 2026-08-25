@@ -29,7 +29,7 @@ The release gate runs package checks, tests, the fixture-backed CLI smoke, and a
 
 - Required skill sections such as when to use, inputs, side effects, approvals, examples, and validation.
 - Local smoke commands from fenced shell snippets and `package.json` scripts.
-- Risky command families: mutating Git operations; mutating GitHub issue, pull-request, release, and repository operations; package publish/version operations; deploy, messaging, destructive removal, and network commands (`curl`, `wget`, `ssh`, and `scp`). Destructive cleanup includes forced `git clean` (but not `--dry-run`/`-n`) and `rm` only when both recursive and force options are present; combined, separated, long, and target-before-option forms are recognized. Matching is case-insensitive and checks both fenced examples and suggested `npm run` wrappers' package-script bodies.
+- Risky command families: mutating Git operations; mutating GitHub issue, pull-request, release, and repository operations; package publish/version operations; deploy, messaging, destructive removal, and network commands (`curl`, `wget`, `ssh`, and `scp`). Destructive cleanup includes forced `git clean` (but not `--dry-run`/`-n`) and `rm` only when both recursive and force options are present; combined, separated, long, and target-before-option forms are recognized. Standard Git global options before `clean`, including separated or combined `-C` and long `--work-tree`/`--git-dir` forms, do not hide destructive cleanup. Matching is case-insensitive and checks both fenced examples and suggested `npm run` wrappers' package-script bodies.
 - Evidence artifacts a reviewer should expect from the smoke run.
 
 By default, the planner searches from the `SKILL.md` directory upward for the

@@ -295,6 +295,9 @@ test("flags destructive cleanup without flagging safe neighbors", async () => {
   for (const command of [
     "git clean -fdx",
     "git clean ./build --force -d",
+    "git -C . clean -fd",
+    "git -C./sandbox clean ./build --force -d",
+    "git --work-tree=./sandbox clean -d --force",
     "rm -rf dist",
     "rm ./coverage -fr",
     "rm --recursive ./cache --force"
@@ -303,10 +306,24 @@ test("flags destructive cleanup without flagging safe neighbors", async () => {
   for (const command of [
     "git clean -ndx",
     "git clean --dry-run -fd",
+    "git -C . clean -nfd",
     "git status --short",
     "rm -r logs",
     "rm -f artifact.txt"
   ]) assert.equal(risks[command], false, `${command} should remain non-risky`);
+
+  const jsonResult = spawnSync(process.execPath, [
+    "bin/skill-smokeplanner.js",
+    "plan",
+    "fixtures/cleanup-risk-skill/SKILL.md",
+    "--json"
+  ], { encoding: "utf8" });
+  assert.equal(jsonResult.status, 0, jsonResult.stderr);
+  const jsonPlan = JSON.parse(jsonResult.stdout);
+  assert.equal(jsonPlan.commands.find(({ command }) => command === "git -C . clean -fd")?.risky, true);
+
+  const markdown = renderPlan(plan);
+  assert.match(markdown, /WARNING: Review risky command before running: git -C \. clean -fd/);
 });
 
 test("flags package-script bodies and commands regardless of casing", async () => {
