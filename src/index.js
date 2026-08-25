@@ -268,8 +268,9 @@ function makeCommand(command, source, script) {
 function hasDestructiveCleanup(command) {
   for (const segment of command.split(/(?:&&|\|\||[;|])/u)) {
     const tokens = segment.trim().split(/\s+/u);
-    if (tokens[0] === "git" && tokens[1] === "clean") {
-      const options = tokens.slice(2).filter((token) => token.startsWith("-"));
+    const gitCleanArguments = findGitCleanArguments(tokens);
+    if (gitCleanArguments) {
+      const options = gitCleanArguments.filter((token) => token.startsWith("-"));
       const dryRun = options.some((token) => token === "--dry-run" || /^-[^-]*n/u.test(token));
       const forced = options.some((token) => token === "--force" || /^-[^-]*f/u.test(token));
       if (forced && !dryRun) return true;
@@ -283,6 +284,32 @@ function hasDestructiveCleanup(command) {
     }
   }
   return false;
+}
+
+function findGitCleanArguments(tokens) {
+  if (tokens[0] !== "git") return undefined;
+
+  const valueOptions = new Set(["-c", "--config-env", "--git-dir", "--work-tree", "--namespace", "--super-prefix"]);
+  const flagOptions = new Set([
+    "--bare", "--literal-pathspecs", "--glob-pathspecs", "--noglob-pathspecs",
+    "--icase-pathspecs", "--no-optional-locks", "--no-pager", "--paginate"
+  ]);
+
+  for (let index = 1; index < tokens.length;) {
+    const token = tokens[index];
+    if (token === "clean") return tokens.slice(index + 1);
+    if (valueOptions.has(token)) {
+      if (tokens[index + 1] === undefined) return undefined;
+      index += 2;
+      continue;
+    }
+    if (/^-c.+/u.test(token) || /^--(?:config-env|git-dir|work-tree|namespace|super-prefix)=.+/u.test(token) || flagOptions.has(token)) {
+      index += 1;
+      continue;
+    }
+    return undefined;
+  }
+  return undefined;
 }
 
 function normalizeCommandForRisk(command) {
