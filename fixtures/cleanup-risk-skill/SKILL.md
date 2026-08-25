@@ -16,8 +16,12 @@ Maintainer approval is required before destructive cleanup.
 ```sh
 git clean -fdx
 git clean ./build --force -d
+git -C . clean -fd
+git -C./sandbox clean ./build --force -d
+git --work-tree=./sandbox clean -d --force
 git clean -ndx
 git clean --dry-run -fd
+git -C . clean -nfd
 git status --short
 rm -rf dist
 rm ./coverage -fr
