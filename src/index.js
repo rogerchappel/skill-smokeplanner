@@ -98,8 +98,13 @@ export function parseSkill(markdown) {
       continue;
     }
 
-    const heading = line.match(/^ {0,3}(#{2,6})(?:[ \t]+|$)(.*)$/);
+    const heading = line.match(/^ {0,3}(#{1,6})(?:[ \t]+|$)(.*)$/);
     if (heading) {
+      if (heading[1].length === 1) {
+        current = undefined;
+        enclosingH2 = undefined;
+        continue;
+      }
       const headingText = heading[2].replace(/[ \t]+#+[ \t]*$/, "").trim();
       current = normalizeHeading(headingText);
       sections[current] = sections[current] ?? "";
