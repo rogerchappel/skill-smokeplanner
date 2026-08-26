@@ -39,7 +39,9 @@ only a `package.json` beside `SKILL.md` is considered. Use `--repo-root <path>`
 to read one specific repository root instead; the library API provides the same
 override as `planSkill(skillPath, { repoRoot })`.
 
-Section names may use CommonMark ATX headings from level 2 through level 6. The
+Section names may use CommonMark ATX headings from level 2 through level 6. An
+H1 starts a new document-level region and ends any active skill section, but is
+not itself treated as a skill section. The
 heading may have up to three leading spaces and an optional closing sequence of
 `#` characters, for example `   #### Inputs ####`. Headings inside fenced code
 blocks and headings indented by four or more spaces are treated as examples,
