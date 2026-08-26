@@ -68,6 +68,34 @@ Sibling content.
   assert.doesNotMatch(parsed.sections["required tools or inputs"], /Sibling content/);
 });
 
+test("uses H1 as a boundary without treating it as a skill section", () => {
+  const parsed = parseSkill(`## Inputs
+# Appendix
+Unrelated prose.
+`);
+
+  assert.equal(parsed.sections.inputs, undefined);
+  assert.equal(parsed.sections.appendix, undefined);
+  assert.equal(Object.values(parsed.sections).some((content) => /Unrelated prose/.test(content)), false);
+});
+
+test("keeps H2-H6 content nested until an H1 boundary", () => {
+  const parsed = parseSkill(`## Inputs
+Input introduction.
+### Runtime
+Node.js 20.
+###### Detail
+No global install required.
+# Appendix
+Not part of Inputs.
+`);
+
+  assert.equal(parsed.sections.inputs, "Input introduction.\nNode.js 20.\nNo global install required.");
+  assert.equal(parsed.sections.runtime, "Node.js 20.");
+  assert.equal(parsed.sections.detail, "No global install required.");
+  assert.doesNotMatch(parsed.sections.inputs, /Appendix|Not part/);
+});
+
 test("keeps fenced nested headings out of parent and child sections", () => {
   const parsed = parseSkill(`## When To Use
 ### Scenario
