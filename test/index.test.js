@@ -326,6 +326,12 @@ test("flags destructive cleanup without flagging safe neighbors", async () => {
     "git -C . clean -fd",
     "git -C./sandbox clean ./build --force -d",
     "git --work-tree=./sandbox clean -d --force",
+    "git -C /tmp/example push",
+    "git -C/tmp/example commit -m release",
+    "git --git-dir .git merge topic",
+    "git --work-tree=./sandbox rebase main",
+    "git --namespace demo reset --hard HEAD",
+    "git --no-pager tag v1.0.0",
     "rm -rf dist",
     "rm ./coverage -fr",
     "rm --recursive ./cache --force"
@@ -336,6 +342,9 @@ test("flags destructive cleanup without flagging safe neighbors", async () => {
     "git clean --dry-run -fd",
     "git -C . clean -nfd",
     "git status --short",
+    "echo /tmp/git push",
+    "printf 'git commit'",
+    "./tools/git merge",
     "rm -r logs",
     "rm -f artifact.txt"
   ]) assert.equal(risks[command], false, `${command} should remain non-risky`);
