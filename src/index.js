@@ -11,7 +11,6 @@ const REQUIRED_SECTIONS = [
 ];
 
 const RISKY_COMMANDS = [
-  /\bgit\s+(?:commit|push|merge|rebase|reset|tag)\b/,
   /\bgh\s+(?:issue\s+(?:close|create|delete|edit|reopen|transfer)|pr\s+(?:close|create|edit|merge|ready|reopen|review)|release\s+(?:create|delete|edit|upload)|repo\s+(?:archive|create|delete|edit|fork|rename|sync))\b/,
   /\b(?:npm|pnpm)\s+(?:publish|unpublish|deprecate|version)\b/,
   /\byarn\s+npm\s+(?:publish|tag\s+(?:add|remove))\b/,
@@ -265,7 +264,9 @@ function makeCommand(command, source, script) {
     source,
     ...(script === undefined ? {} : { script }),
     risky: inspectedCommands.some((candidate) =>
-      RISKY_COMMANDS.some((pattern) => pattern.test(candidate)) || hasDestructiveCleanup(candidate)
+      RISKY_COMMANDS.some((pattern) => pattern.test(candidate)) ||
+      hasMutatingGitCommand(candidate) ||
+      hasDestructiveCleanup(candidate)
     )
   };
 }
@@ -273,7 +274,7 @@ function makeCommand(command, source, script) {
 function hasDestructiveCleanup(command) {
   for (const segment of command.split(/(?:&&|\|\||[;|])/u)) {
     const tokens = segment.trim().split(/\s+/u);
-    const gitCleanArguments = findGitCleanArguments(tokens);
+    const gitCleanArguments = findGitCommandArguments(tokens, "clean");
     if (gitCleanArguments) {
       const options = gitCleanArguments.filter((token) => token.startsWith("-"));
       const dryRun = options.some((token) => token === "--dry-run" || /^-[^-]*n/u.test(token));
@@ -291,24 +292,33 @@ function hasDestructiveCleanup(command) {
   return false;
 }
 
-function findGitCleanArguments(tokens) {
+function hasMutatingGitCommand(command) {
+  const mutatingCommands = new Set(["commit", "push", "merge", "rebase", "reset", "tag"]);
+  return command.split(/(?:&&|\|\||[;|])/u).some((segment) => {
+    const tokens = segment.trim().split(/\s+/u);
+    return [...mutatingCommands].some((subcommand) => findGitCommandArguments(tokens, subcommand) !== undefined);
+  });
+}
+
+function findGitCommandArguments(tokens, subcommand) {
   if (tokens[0] !== "git") return undefined;
 
-  const valueOptions = new Set(["-c", "--config-env", "--git-dir", "--work-tree", "--namespace", "--super-prefix"]);
+  const valueOptions = new Set(["-c", "-C", "--config-env", "--exec-path", "--git-dir", "--work-tree", "--namespace", "--super-prefix"]);
   const flagOptions = new Set([
+    "--html-path", "--man-path", "--info-path", "--version", "--help",
     "--bare", "--literal-pathspecs", "--glob-pathspecs", "--noglob-pathspecs",
     "--icase-pathspecs", "--no-optional-locks", "--no-pager", "--paginate"
   ]);
 
   for (let index = 1; index < tokens.length;) {
     const token = tokens[index];
-    if (token === "clean") return tokens.slice(index + 1);
+    if (token === subcommand) return tokens.slice(index + 1);
     if (valueOptions.has(token)) {
       if (tokens[index + 1] === undefined) return undefined;
       index += 2;
       continue;
     }
-    if (/^-c.+/u.test(token) || /^--(?:config-env|git-dir|work-tree|namespace|super-prefix)=.+/u.test(token) || flagOptions.has(token)) {
+    if (/^-(?:c|C).+/u.test(token) || /^--(?:config-env|exec-path|git-dir|work-tree|namespace|super-prefix)=.*$/u.test(token) || flagOptions.has(token)) {
       index += 1;
       continue;
     }
