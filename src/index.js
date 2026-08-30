@@ -11,16 +11,10 @@ const REQUIRED_SECTIONS = [
 ];
 
 const RISKY_COMMANDS = [
-  /\bgh\s+(?:issue\s+(?:close|create|delete|edit|reopen|transfer)|pr\s+(?:close|create|edit|merge|ready|reopen|review)|release\s+(?:create|delete|edit|upload)|repo\s+(?:archive|create|delete|edit|fork|rename|sync))\b/,
-  /\b(?:npm|pnpm)\s+(?:publish|unpublish|deprecate|version)\b/,
-  /\byarn\s+npm\s+(?:publish|tag\s+(?:add|remove))\b/,
-  /\bdeploy\b/,
-  /\bcurl\b/,
-  /\bwget\b/,
-  /\bssh\b/,
-  /\bscp\b/,
-  /\bmessage\b/,
-  /\bsend\b/
+  /^gh\s+(?:issue\s+(?:close|create|delete|edit|reopen|transfer)|pr\s+(?:close|create|edit|merge|ready|reopen|review)|release\s+(?:create|delete|edit|upload)|repo\s+(?:archive|create|delete|edit|fork|rename|sync))\b/,
+  /^(?:npm|pnpm)\s+(?:publish|unpublish|deprecate|version)\b/,
+  /^yarn\s+npm\s+(?:publish|tag\s+(?:add|remove))\b/,
+  /^(?:deploy|curl|wget|ssh|scp|message|send)(?:\s|$)/
 ];
 
 export async function planSkill(skillPath, options = {}) {
@@ -83,7 +77,11 @@ export function parseSkill(markdown) {
       : null;
     if (closingFence) {
       if (["sh", "shell", "bash", "zsh"].includes(fenceLang)) {
-        shellSnippets.push(fence.join("\n").trim());
+        const snippet = fence.join("\n").trim();
+        shellSnippets.push(snippet);
+        for (const target of new Set([current, enclosingH2].filter(Boolean))) {
+          sections[target] = `${sections[target] ?? ""}${snippet}\n`;
+        }
       }
       inFence = false;
       fenceMarker = "";
@@ -257,7 +255,7 @@ async function exists(candidate) {
 function makeCommand(command, source, script) {
   const inspectedCommands = [command, script]
     .filter((value) => typeof value === "string")
-    .map(normalizeCommandForRisk);
+    .flatMap(commandInvocations);
 
   return {
     command,
@@ -329,6 +327,54 @@ function findGitCommandArguments(tokens, subcommand) {
 
 function normalizeCommandForRisk(command) {
   return command.toLowerCase();
+}
+
+function commandInvocations(command) {
+  return splitCommandSegments(command).map((segment) => {
+    const tokens = shellWords(segment);
+    let index = 0;
+    while (/^[A-Za-z_][A-Za-z0-9_]*=/u.test(tokens[index] ?? "")) index += 1;
+    return normalizeCommandForRisk(tokens.slice(index).join(" "));
+  }).filter(Boolean);
+}
+
+function splitCommandSegments(command) {
+  const segments = [];
+  let current = "";
+  let quote;
+  for (let index = 0; index < command.length; index += 1) {
+    const character = command[index];
+    if (quote) {
+      current += character;
+      if (character === quote && command[index - 1] !== "\\") quote = undefined;
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+      current += character;
+      continue;
+    }
+    const pair = command.slice(index, index + 2);
+    if (pair === "&&" || pair === "||") {
+      segments.push(current);
+      current = "";
+      index += 1;
+      continue;
+    }
+    if (character === ";" || character === "|") {
+      segments.push(current);
+      current = "";
+      continue;
+    }
+    current += character;
+  }
+  segments.push(current);
+  return segments;
+}
+
+function shellWords(segment) {
+  return [...segment.matchAll(/"([^"]*)"|'([^']*)'|([^\s]+)/gu)]
+    .map((match) => match[1] ?? match[2] ?? match[3]);
 }
 
 function normalizeHeading(value) {
