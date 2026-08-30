@@ -18,7 +18,38 @@ npm test
 \`\`\`
 `);
   assert.equal(parsed.sections["when to use"], "Use it.");
+  assert.equal(parsed.sections.examples, "npm test");
   assert.deepEqual(parsed.shellSnippets, ["npm test"]);
+});
+
+test("accepts a supported shell fence as nonempty Examples content", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-fence-"));
+  const skillPath = path.join(directory, "SKILL.md");
+  await writeFile(skillPath, `## Examples
+\`\`\`sh
+echo curl
+\`\`\`
+`);
+
+  const plan = await planSkill(skillPath, { repoRoot: directory });
+  assert.equal(plan.findings.some(({ message }) => message.includes("Examples")), false);
+});
+
+test("distinguishes echoed command names from genuine invocations", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-risk-"));
+  const skillPath = path.join(directory, "SKILL.md");
+  await writeFile(skillPath, `## Examples
+\`\`\`sh
+echo curl
+printf '%s\\n' "npm publish"
+echo safe && echo deploy
+echo ready && curl https://example.invalid
+printf done | npm publish
+\`\`\`
+`);
+
+  const plan = await planSkill(skillPath, { repoRoot: directory });
+  assert.deepEqual(plan.commands.map(({ risky }) => risky), [false, false, false, true, true]);
 });
 
 test("parses CommonMark ATX headings with indentation and closing sequences", () => {
