@@ -29,7 +29,7 @@ The release gate runs package checks, tests, the fixture-backed CLI smoke, and a
 
 - Required skill sections such as when to use, inputs, side effects, approvals, examples, and validation.
 - Local smoke commands from fenced shell snippets and `package.json` scripts.
-- Risky command families: mutating Git operations; mutating GitHub issue, pull-request, release, and repository operations; package publish/version operations; deploy, messaging, destructive removal, and network commands (`curl`, `wget`, `ssh`, and `scp`). Git mutation detection requires `git` to begin a shell command segment, then recognizes standard Git global options (including separated or attached `-C` and long `--work-tree`/`--git-dir` forms) before `commit`, `push`, `merge`, `rebase`, `reset`, `tag`, or `clean`; prose and path substrings are not treated as invocations. Destructive cleanup includes forced `git clean` (but not `--dry-run`/`-n`) and `rm` only when both recursive and force options are present; combined, separated, long, and target-before-option forms are recognized. Matching is case-insensitive and checks both fenced examples and suggested `npm run` wrappers' package-script bodies.
+- Risky command families: mutating Git operations; mutating GitHub issue, pull-request, release, and repository operations; package publish/version operations; deploy, messaging, destructive removal, and network commands (`curl`, `wget`, `ssh`, and `scp`). Detection checks executable positions at the start of each shell command segment, so `echo curl` remains local while `echo ready && curl URL` is risky. Git mutation detection recognizes standard Git global options (including separated or attached `-C` and long `--work-tree`/`--git-dir` forms) before `commit`, `push`, `merge`, `rebase`, `reset`, `tag`, or `clean`; prose and path substrings are not treated as invocations. Destructive cleanup includes forced `git clean` (but not `--dry-run`/`-n`) and `rm` only when both recursive and force options are present; combined, separated, long, and target-before-option forms are recognized. Matching is case-insensitive and checks both fenced examples and suggested `npm run` wrappers' package-script bodies.
 - Evidence artifacts a reviewer should expect from the smoke run.
 
 By default, the planner searches from the `SKILL.md` directory upward for the
@@ -60,7 +60,7 @@ false missing-section warnings; content never carries into a sibling H2.
 ## Limitations
 
 - Markdown parsing is intentionally small and deterministic.
-- Shell examples may use CommonMark backtick or tilde fences (three or more matching markers) with an `sh`, `shell`, `bash`, or `zsh` info string. A closing fence must use the same marker and be at least as long as its opener.
+- Shell examples may use CommonMark backtick or tilde fences (three or more matching markers) with an `sh`, `shell`, `bash`, or `zsh` info string. A nonempty supported shell fence counts as section content. A closing fence must use the same marker and be at least as long as its opener.
 - The CLI accepts `plan <skill-path>` with optional single `--json` and `--repo-root <path>` flags; unknown, duplicate, missing-value, and extra arguments are errors.
 - Risk detection recognizes a conservative command taxonomy, not shell semantics. It does not expand aliases, variables, or scripts beyond the preferred `test`, `check`, `build`, and `smoke` package-script bodies.
 - The planner cannot prove that a skill works; it creates a repeatable checklist for local validation.
