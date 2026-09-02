@@ -363,6 +363,8 @@ test("flags destructive cleanup without flagging safe neighbors", async () => {
     "git --work-tree=./sandbox rebase main",
     "git --namespace demo reset --hard HEAD",
     "git --no-pager tag v1.0.0",
+    "env CI=1 git reset --hard HEAD",
+    "env -i HOME=/tmp git -C . clean -fd",
     "rm -rf dist",
     "rm ./coverage -fr",
     "rm --recursive ./cache --force"
@@ -373,6 +375,8 @@ test("flags destructive cleanup without flagging safe neighbors", async () => {
     "git clean --dry-run -fd",
     "git -C . clean -nfd",
     "git status --short",
+    "env CI=1 git status --short",
+    "env CI=1 echo git reset --hard HEAD",
     "echo /tmp/git push",
     "printf 'git commit'",
     "./tools/git merge",
@@ -389,6 +393,7 @@ test("flags destructive cleanup without flagging safe neighbors", async () => {
   assert.equal(jsonResult.status, 0, jsonResult.stderr);
   const jsonPlan = JSON.parse(jsonResult.stdout);
   assert.equal(jsonPlan.commands.find(({ command }) => command === "git -C . clean -fd")?.risky, true);
+  assert.equal(jsonPlan.commands.find(({ command }) => command === "env CI=1 git reset --hard HEAD")?.risky, true);
 
   const markdown = renderPlan(plan);
   assert.match(markdown, /WARNING: Review risky command before running: git -C \. clean -fd/);

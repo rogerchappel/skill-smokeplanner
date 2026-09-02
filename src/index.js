@@ -332,10 +332,35 @@ function normalizeCommandForRisk(command) {
 function commandInvocations(command) {
   return splitCommandSegments(command).map((segment) => {
     const tokens = shellWords(segment);
-    let index = 0;
-    while (/^[A-Za-z_][A-Za-z0-9_]*=/u.test(tokens[index] ?? "")) index += 1;
+    const index = commandExecutableIndex(tokens);
     return normalizeCommandForRisk(tokens.slice(index).join(" "));
   }).filter(Boolean);
+}
+
+function commandExecutableIndex(tokens) {
+  let index = 0;
+  while (/^[A-Za-z_][A-Za-z0-9_]*=/u.test(tokens[index] ?? "")) index += 1;
+  if (!/^(?:env|\/usr\/bin\/env)$/u.test(tokens[index] ?? "")) return index;
+
+  index += 1;
+  while (index < tokens.length) {
+    const token = tokens[index];
+    if (token === "--") return index + 1;
+    if (/^[A-Za-z_][A-Za-z0-9_]*=/u.test(token)) {
+      index += 1;
+      continue;
+    }
+    if (token === "-i" || token === "--ignore-environment" || /^--(?:unset|chdir)=/u.test(token)) {
+      index += 1;
+      continue;
+    }
+    if (token === "-u" || token === "--unset" || token === "-C" || token === "--chdir") {
+      index += 2;
+      continue;
+    }
+    break;
+  }
+  return index;
 }
 
 function splitCommandSegments(command) {

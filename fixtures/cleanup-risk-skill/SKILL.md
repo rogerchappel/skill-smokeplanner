@@ -25,10 +25,14 @@ git --git-dir .git merge topic
 git --work-tree=./sandbox rebase main
 git --namespace demo reset --hard HEAD
 git --no-pager tag v1.0.0
+env CI=1 git reset --hard HEAD
+env -i HOME=/tmp git -C . clean -fd
 git clean -ndx
 git clean --dry-run -fd
 git -C . clean -nfd
 git status --short
+env CI=1 git status --short
+env CI=1 echo git reset --hard HEAD
 echo /tmp/git push
 printf 'git commit'
 ./tools/git merge
