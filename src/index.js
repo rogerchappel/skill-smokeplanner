@@ -333,7 +333,15 @@ function commandInvocations(command) {
   return splitCommandSegments(command).map((segment) => {
     const tokens = shellWords(segment);
     const index = commandExecutableIndex(tokens);
-    return normalizeCommandForRisk(tokens.slice(index).join(" "));
+    if (tokens[index - 1] !== "-S" && tokens[index - 1] !== "--split-string") {
+      return normalizeCommandForRisk(tokens.slice(index).join(" "));
+    }
+    // The -S value arrives as one shell word, but env re-splits it before
+    // execution; re-tokenize (and re-resolve leading assignments) so the
+    // embedded executable is classified, not the raw option value.
+    const embedded = shellWords(tokens[index] ?? "");
+    const embeddedIndex = commandExecutableIndex(embedded);
+    return normalizeCommandForRisk(embedded.slice(embeddedIndex).join(" "));
   }).filter(Boolean);
 }
 
@@ -357,6 +365,11 @@ function commandExecutableIndex(tokens) {
     if (token === "-u" || token === "--unset" || token === "-C" || token === "--chdir") {
       index += 2;
       continue;
+    }
+    if (token === "-S" || token === "--split-string") {
+      // env re-splits the -S/--split-string value into the executed command
+      // line, so the executable position is the embedded command string.
+      return index + 1;
     }
     break;
   }
