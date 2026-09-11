@@ -347,6 +347,36 @@ test("flags risky external action commands", async () => {
   assert.equal(plan.findings.some((item) => item.message.includes("npm publish")), true);
 });
 
+test("classifies commands embedded in env -S/--split-string", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-env-split-"));
+  const skillPath = path.join(directory, "SKILL.md");
+  await writeFile(skillPath, `## Examples
+\`\`\`sh
+env -S "npm publish"
+env --split-string "npm publish"
+env CI=1 -S "npm publish"
+env -S "CI=1 npm publish"
+env -S "git status --short"
+env --split-string "git status --short"
+\`\`\`
+`);
+
+  const plan = await planSkill(skillPath, { repoRoot: directory });
+  const risks = Object.fromEntries(plan.commands.map(({ command, risky }) => [command, risky]));
+
+  for (const command of [
+    "env -S \"npm publish\"",
+    "env --split-string \"npm publish\"",
+    "env CI=1 -S \"npm publish\"",
+    "env -S \"CI=1 npm publish\""
+  ]) assert.equal(risks[command], true, `${command} should be risky`);
+
+  for (const command of [
+    "env -S \"git status --short\"",
+    "env --split-string \"git status --short\""
+  ]) assert.equal(risks[command], false, `${command} should remain non-risky`);
+});
+
 test("flags destructive cleanup without flagging safe neighbors", async () => {
   const plan = await planSkill("fixtures/cleanup-risk-skill/SKILL.md");
   const risks = Object.fromEntries(plan.commands.map(({ command, risky }) => [command, risky]));
