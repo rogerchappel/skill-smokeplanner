@@ -42,12 +42,7 @@ export async function discoverRepoRoot(skillPath) {
   const repositoryRoot = await findContainingGitRoot(skillDirectory);
   if (repositoryRoot === undefined) return skillDirectory;
 
-  let candidate = skillDirectory;
-  while (true) {
-    if (await exists(path.join(candidate, "package.json"))) return candidate;
-    if (candidate === repositoryRoot) return repositoryRoot;
-    candidate = path.dirname(candidate);
-  }
+  return repositoryRoot;
 }
 
 export function parseSkill(markdown) {
