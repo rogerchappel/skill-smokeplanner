@@ -276,6 +276,25 @@ test("CLI supports an explicit repository root override", () => {
   ]);
 });
 
+test("prefers the Git root over package metadata in a nested skill directory", async () => {
+  const repository = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-nested-package-"));
+  const skillDirectory = path.join(repository, "packages", "demo");
+  const skillPath = path.join(skillDirectory, "skills", "example", "SKILL.md");
+  await mkdir(path.join(repository, ".git"), { recursive: true });
+  await mkdir(path.dirname(skillPath), { recursive: true });
+  await writeFile(path.join(repository, "package.json"), JSON.stringify({
+    scripts: { test: "root-test" }
+  }));
+  await writeFile(path.join(skillDirectory, "package.json"), JSON.stringify({
+    scripts: { test: "nested-test" }
+  }));
+  await writeFile(skillPath, "# Example\n");
+
+  const plan = await planSkill(skillPath);
+  assert.equal(await discoverRepoRoot(skillPath), repository);
+  assert.equal(plan.commands.find(({ command }) => command === "npm run test")?.script, "root-test");
+});
+
 test("does not discover unrelated package metadata above a repository boundary", async () => {
   const outer = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-boundary-"));
   const repository = path.join(outer, "repository");
