@@ -536,15 +536,31 @@ npm test
   assert.deepEqual(parsed.sections, { examples: "npm test" });
 });
 
-test("malformed or unclosed frontmatter delimiters are not stripped", () => {
+test("unclosed frontmatter delimiter remains ordinary intro prose", () => {
   const unclosed = parseSkill(`---
 title: Demo
 ## Examples
 npm test
 `);
-  assert.match(unclosed.sections.examples, /title: Demo/);
-  assert.match(unclosed.sections.examples, /npm test/);
+  assert.deepEqual(unclosed.sections, {
+    intro: "---\ntitle: Demo",
+    examples: "npm test"
+  });
+});
 
+test("frontmatter-looking delimiters after prose are not stripped", () => {
+  const parsed = parseSkill(`Intro prose.
+---
+title: Demo
+---
+## Examples
+npm test
+`);
+  assert.match(parsed.sections.intro, /title: Demo/);
+  assert.deepEqual(parsed.sections.examples, "npm test");
+});
+
+test("malformed YAML inside a closed frontmatter block is skipped as metadata", () => {
   const malformed = parseSkill(`---
 title Demo
 ---
