@@ -522,3 +522,34 @@ test("matches the complete skill golden plan shape", async () => {
   const expected = await readFile("fixtures/complete-skill/expected-plan.md", "utf8");
   assert.equal(markdown.trim(), expected.trim());
 });
+
+
+test("ignores valid YAML frontmatter before Markdown sections", () => {
+  const parsed = parseSkill(`---
+title: Demo
+tags:
+  - smoke
+---
+## Examples
+npm test
+`);
+  assert.deepEqual(parsed.sections, { examples: "npm test" });
+});
+
+test("malformed or unclosed frontmatter delimiters are not stripped", () => {
+  const unclosed = parseSkill(`---
+title: Demo
+## Examples
+npm test
+`);
+  assert.match(unclosed.sections.examples, /title: Demo/);
+  assert.match(unclosed.sections.examples, /npm test/);
+
+  const malformed = parseSkill(`---
+title Demo
+---
+## Examples
+npm test
+`);
+  assert.deepEqual(malformed.sections, { examples: "npm test" });
+});
