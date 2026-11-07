@@ -22,6 +22,16 @@ npm test
   assert.deepEqual(parsed.shellSnippets, ["npm test"]);
 });
 
+test("does not suggest shell commands from blockquoted fences", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-quote-"));
+  const skillPath = path.join(directory, "SKILL.md");
+  await writeFile(skillPath, ["## Examples", "> A quoted example:", "> ```sh", "> npm publish", "> ```", ""].join("\\n"));
+
+  const plan = await planSkill(skillPath, { repoRoot: directory });
+  assert.deepEqual(plan.commands, []);
+  assert.equal(plan.findings.some(({ message }) => message.includes("risky command")), false);
+});
+
 test("accepts a supported shell fence as nonempty Examples content", async () => {
   const directory = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-fence-"));
   const skillPath = path.join(directory, "SKILL.md");

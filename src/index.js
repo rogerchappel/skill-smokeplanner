@@ -59,10 +59,18 @@ export function parseSkill(markdown) {
   let fenceLength = 0;
   let fenceLang = "";
   let fence = [];
+  let inBlockquote = false;
 
   for (const line of lines) {
+    const blockquotePrefix = line.match(/^ {0,3}>/);
+    if (blockquotePrefix) {
+      inBlockquote = true;
+      continue;
+    }
+    if (line.trim() !== "") inBlockquote = false;
+
     const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
-    if (fenceMatch && !inFence && !(fenceMatch[1][0] === "`" && fenceMatch[2].includes("`"))) {
+    if (fenceMatch && !inFence && !inBlockquote && !(fenceMatch[1][0] === "`" && fenceMatch[2].includes("`"))) {
       inFence = true;
       fenceMarker = fenceMatch[1][0];
       fenceLength = fenceMatch[1].length;
