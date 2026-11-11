@@ -62,6 +62,25 @@ printf done | npm publish
   assert.deepEqual(plan.commands.map(({ risky }) => risky), [false, false, false, true, true]);
 });
 
+test("handles escaped quote parity and keeps shell operators inside quotes", async () => {
+  const directory = await mkdtemp(path.join(tmpdir(), "skill-smokeplanner-escapes-"));
+  const skillPath = path.join(directory, "SKILL.md");
+  const markdown = [
+    "## Examples", "```sh", 'echo "ordinary quoted prose"',
+    String.raw`echo \"npm publish\" && echo safe`,
+    String.raw`echo \\\"npm publish\\" && npm publish`,
+    "echo 'npm publish' ; git push origin main", "```", ""
+  ].join("\n");
+  await writeFile(skillPath, markdown);
+
+  const plan = await planSkill(skillPath, { repoRoot: directory });
+  const risks = Object.fromEntries(plan.commands.map(({ command, risky }) => [command, risky]));
+  assert.equal(risks['echo "ordinary quoted prose"'], false);
+  assert.equal(risks[String.raw`echo \"npm publish\" && echo safe`], false);
+  assert.equal(risks[String.raw`echo \\\"npm publish\\" && npm publish`], true);
+  assert.equal(risks["echo 'npm publish' ; git push origin main"], true);
+});
+
 test("parses CommonMark ATX headings with indentation and closing sequences", () => {
   const parsed = parseSkill(`   ## When To Use ##
 Use it.

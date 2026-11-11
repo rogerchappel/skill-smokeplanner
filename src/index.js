@@ -390,7 +390,7 @@ function splitCommandSegments(command) {
     const character = command[index];
     if (quote) {
       current += character;
-      if (character === quote && command[index - 1] !== "\\") quote = undefined;
+      if (character === quote && !isEscaped(command, index)) quote = undefined;
       continue;
     }
     if (character === "'" || character === '"') {
@@ -417,8 +417,50 @@ function splitCommandSegments(command) {
 }
 
 function shellWords(segment) {
-  return [...segment.matchAll(/"([^"]*)"|'([^']*)'|([^\s]+)/gu)]
-    .map((match) => match[1] ?? match[2] ?? match[3]);
+  const words = [];
+  let word = "";
+  let started = false;
+  let quote;
+  for (let index = 0; index < segment.length; index += 1) {
+    const character = segment[index];
+    if (quote === "'") {
+      if (character === "'") quote = undefined;
+      else word += character;
+      continue;
+    }
+    if (character === "\\" && index + 1 < segment.length) {
+      word += segment[++index];
+      started = true;
+      continue;
+    }
+    if (quote) {
+      if (character === quote) quote = undefined;
+      else word += character;
+      continue;
+    }
+    if (character === "'" || character === '"') {
+      quote = character;
+      started = true;
+    } else if (/\s/u.test(character)) {
+      if (started) words.push(word);
+      word = "";
+      started = false;
+    } else {
+      word += character;
+      started = true;
+    }
+  }
+  if (quote) return [segment];
+  if (started) words.push(word);
+  return words;
+}
+
+function isEscaped(value, index) {
+  let backslashes = 0;
+  for (let cursor = index - 1; cursor >= 0 && value[cursor] === "\\"; cursor -= 1) {
+    backslashes += 1;
+  }
+  return backslashes % 2 === 1;
 }
 
 function normalizeHeading(value) {
