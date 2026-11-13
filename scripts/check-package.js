@@ -14,7 +14,7 @@ for (const file of required) {
   await access(file);
 }
 
-const pkg = JSON.parse(await readFile("package.json", "utf8"));
+const pkg = JSON.parse(await readFile(process.env.PACKAGE_JSON_PATH ?? "package.json", "utf8"));
 if (!pkg.bin || !pkg.exports || !pkg.scripts?.smoke) {
   throw new Error("package metadata is missing CLI, exports, or smoke script");
 }
