@@ -372,6 +372,16 @@ test("CLI accepts populated required sections implemented with nested subsection
   }
 });
 
+test("ignores YAML frontmatter when extracting sections and commands", async () => {
+  const plan = await planSkill("fixtures/frontmatter-skill/SKILL.md", {
+    repoRoot: "fixtures/frontmatter-skill"
+  });
+  assert.equal(plan.sections.examples, "npm test");
+  assert.equal(plan.commands.some((item) => item.command === "npm test" && item.source === "SKILL.md example"), true);
+  assert.equal(plan.commands.some((item) => item.command.includes("npm publish")), false);
+  assert.equal(plan.findings.some((item) => item.message.includes("When To Use")), true);
+});
+
 test("plans a complete skill with local commands", async () => {
   const plan = await planSkill("fixtures/complete-skill/SKILL.md", {
     repoRoot: "fixtures/complete-skill"

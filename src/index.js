@@ -48,10 +48,10 @@ export async function discoverRepoRoot(skillPath) {
 export function parseSkill(markdown) {
   // YAML frontmatter is metadata, not skill prose. Only strip a closed block
   // delimited by standalone --- lines at the very beginning of the file.
-  markdown = markdown.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, "");
+  const body = markdown.replace(/^---\r?\n[\s\S]*?\r?\n(?:---|\.\.\.)\s*(?:\r?\n|$)/, "");
   const sections = {};
   const shellSnippets = [];
-  const lines = markdown.split(/\r?\n/);
+  const lines = body.split(/\r?\n/);
   let current = "intro";
   let enclosingH2;
   let inFence = false;
