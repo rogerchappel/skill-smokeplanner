@@ -64,3 +64,12 @@ false missing-section warnings; content never carries into a sibling H2.
 - The CLI accepts `plan <skill-path>` with optional single `--json` and `--repo-root <path>` flags; unknown, duplicate, missing-value, and extra arguments are errors.
 - Risk detection recognizes a conservative command taxonomy, not shell semantics. It does not expand aliases, variables, or scripts beyond the preferred `test`, `check`, `build`, and `smoke` package-script bodies.
 - The planner cannot prove that a skill works; it creates a repeatable checklist for local validation.
+
+### Frontmatter
+
+A YAML frontmatter block is ignored by the Markdown parser when it begins at the
+very start of `SKILL.md` with `---` and ends at the next `---` or `...` line.
+It is metadata only: its keys, values, and fenced-looking text do not create
+skill sections, shell snippets, or command-risk findings. Body parsing starts
+after the closing delimiter. A document without an opening delimiter is parsed
+as before.
