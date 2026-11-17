@@ -12,7 +12,7 @@
   "scripts": {
     "test": "node --test",
     "check": "node scripts/check-package.js",
-    "build": "node scripts/check-package.js",
+    "build": "node scripts/build-check.js",
     "smoke": "node bin/skill-smokeplanner.js plan fixtures/complete-skill/SKILL.md --json",
     "package:smoke": "node scripts/package-smoke.js",
     "release:check": "npm run check && npm run build && npm run smoke && npm run package:smoke",
