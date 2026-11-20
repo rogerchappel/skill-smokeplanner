@@ -382,6 +382,29 @@ test("ignores YAML frontmatter when extracting sections and commands", async () 
   assert.equal(plan.findings.some((item) => item.message.includes("When To Use")), true);
 });
 
+test("ignores headings and shell-like text inside CommonMark fenced blocks", () => {
+  const parsed = parseSkill(`# Demo
+
+~~~markdown
+## Examples
+~~~sh
+npm publish
+~~~
+~~~~
+## When To Use
+~~~~
+
+## Examples
+~~~~sh
+npm test
+~~~~
+`);
+
+  assert.equal(parsed.sections.examples, "npm test");
+  assert.equal(parsed.sections["when to use"], undefined);
+  assert.deepEqual(parsed.shellSnippets, ["npm test"]);
+});
+
 test("plans a complete skill with local commands", async () => {
   const plan = await planSkill("fixtures/complete-skill/SKILL.md", {
     repoRoot: "fixtures/complete-skill"
