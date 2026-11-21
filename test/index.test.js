@@ -199,6 +199,25 @@ test("recognizes required sections under supported CommonMark ATX forms", async 
   assert.equal(plan.findings.length, 0);
 });
 
+test("parses tilde-fenced shell blocks and ignores non-shell fences", () => {
+  const parsed = parseSkill(`## Examples
+~~~bash extra-info
+npm test
+~~~
+
+~~~~zsh
+npm run check
+~~~~
+
+~~~js
+not-a-shell-command
+~~~
+`);
+
+  assert.deepEqual(parsed.shellSnippets, ["npm test", "npm run check"]);
+  assert.equal(parsed.sections.examples, "npm test\n\nnpm run check");
+});
+
 test("supports CommonMark shell fences without parsing embedded headings", () => {
   const parsed = parseSkill(`# Demo
 
