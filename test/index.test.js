@@ -236,6 +236,24 @@ real section
   assert.deepEqual(parsed.shellSnippets, ["npm test\n## Approval Requirements\nnot a real section"]);
 });
 
+test("keeps blockquote lines and following headings inside an active fence", () => {
+  const parsed = parseSkill(`## Examples
+
+\`\`\`text
+> quoted fence content
+## Required Tools Or Inputs
+## Side-Effect Boundaries
+\`\`\`
+
+## Validation
+real section
+`);
+
+  assert.equal(parsed.sections["required tools or inputs"], undefined);
+  assert.equal(parsed.sections["side-effect boundaries"], undefined);
+  assert.equal(parsed.sections.validation, "real section");
+});
+
 test("requires matching fence markers and sufficiently long closers", () => {
   const parsed = parseSkill(`## Examples
 
